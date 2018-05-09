@@ -13,23 +13,32 @@ namespace DapperWebAPIDemo.DAL
 {    
     public class CustomerRepository : ICustomerRepository
     {
-        private IDbConnection connection = new SqlConnection(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString);
+        private readonly IDbConnection connection;
+
+        public CustomerRepository()
+        {
+            connection = new SqlConnection(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString);
+        }
 
         public List<Customer> GetCustomers(int amount, string sort)
         {
-            throw new NotImplementedException();
+            return this.connection.Query<Customer>(
+                                    "SELECT TOP (@Amount) [CustomerID],[CustomerFirstName],[CustomerLastName],[IsActive] FROM [Customer] ORDER BY CustomerID @Sort", 
+                                    new { Amount = amount, Sort = sort }).ToList();
         }
 
         public Customer GetSingleCustomer(int customerId)
         {
-            return connection.Query<Customer>("SELECT[CustomerID],[CustomerFirstName],[CustomerLastName],[IsActive]" +
-                                            " FROM [Customer] WHERE CustomerID =@CustomerID", new { CustomerID = customerId }).SingleOrDefault();
+            return connection.Query<Customer>(
+                                    "SELECT[CustomerID],[CustomerFirstName],[CustomerLastName],[IsActive]" +
+                                    " FROM [Customer] WHERE CustomerID =@CustomerID", new { CustomerID = customerId }).SingleOrDefault();
         }
 
         public bool InsertCustomer(Customer ourCustomer)
         {
-            int rowsAffected = this.connection.Execute(@"INSERT Customer([CustomerFirstName],[CustomerLastName],[IsActive]) values (@CustomerFirstName, @CustomerLastName,@IsActive)",
-                                                        new { CustomerFirstName = ourCustomer.CustomerFirstName, CustomerLastName = ourCustomer.CustomerLastName, IsActive = true });
+            int rowsAffected = this.connection.Execute(
+                                    @"INSERT Customer([CustomerFirstName],[CustomerLastName],[IsActive]) values (@CustomerFirstName, @CustomerLastName,@IsActive)",
+                                    new { CustomerFirstName = ourCustomer.CustomerFirstName, CustomerLastName = ourCustomer.CustomerLastName, IsActive = true });
 
             if (rowsAffected > 0)
             {
@@ -41,12 +50,27 @@ namespace DapperWebAPIDemo.DAL
 
         public bool DeleteCustomer(int customerId)
         {
-            throw new NotImplementedException();
+            int rowsAffected = this.connection.Execute(
+                                    @"DELETE FROM [Customer] WHERE CustomerID = @CustomerID", new { CustomerID = customerId });
+
+            if (rowsAffected > 0)
+            {
+                return true;
+            }
+            return false;
         }
 
         public bool UpdateCustomer(Customer ourCustomer)
         {
-            throw new NotImplementedException();
+            int rowsAffected = this.connection.Execute(
+                                    "UPDATE [Customer] SET [CustomerFirstName] = @CustomerFirstName ,[CustomerLastName] = @CustomerLastName, [IsActive] = @IsActive WHERE CustomerID = " + 
+                                    ourCustomer.CustomerID, ourCustomer);
+
+            if (rowsAffected > 0)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
