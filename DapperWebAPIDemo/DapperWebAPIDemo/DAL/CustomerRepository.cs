@@ -1,16 +1,14 @@
-﻿using System;
+﻿using Dapper;
+using DapperWebAPIDemo.Models;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Web;
-using Dapper;
-using DapperWebAPIDemo.Models;
 
 
 namespace DapperWebAPIDemo.DAL
-{    
+{
     public class CustomerRepository : ICustomerRepository
     {
         private readonly IDbConnection connection;
@@ -23,8 +21,7 @@ namespace DapperWebAPIDemo.DAL
         public List<Customer> GetCustomers(int amount, string sort)
         {
             return this.connection.Query<Customer>(
-                                    "SELECT TOP (@Amount) [CustomerID],[CustomerFirstName],[CustomerLastName],[IsActive] FROM [Customer] ORDER BY CustomerID @Sort", 
-                                    new { Amount = amount, Sort = sort }).ToList();
+                                    "SELECT TOP " + amount + " [CustomerID],[CustomerFirstName],[CustomerLastName],[IsActive] FROM [Customer] ORDER BY CustomerID " + sort).ToList();
         }
 
         public Customer GetSingleCustomer(int customerId)
